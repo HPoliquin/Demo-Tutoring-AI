@@ -3,9 +3,17 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Angular: Start",
       "type": "npm",
       "script": "start",
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-frontend"
+      },
       "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
       "problemMatcher": {
         "owner": "typescript",
         "pattern": "$tsc",
@@ -15,14 +23,31 @@
             "regexp": "(.*?)"
           },
           "endsPattern": {
-            "regexp": "bundle generation complete"
+            "regexp": "Application bundle generation complete|Compiled successfully"
           }
         }
       }
     },
     {
+      "label": "Angular: Build",
+      "type": "npm",
+      "script": "build",
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-frontend"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "Angular: Test",
       "type": "npm",
       "script": "test",
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-frontend"
+      },
       "isBackground": true,
       "problemMatcher": {
         "owner": "typescript",
@@ -33,9 +58,93 @@
             "regexp": "(.*?)"
           },
           "endsPattern": {
-            "regexp": "bundle generation complete"
+            "regexp": "bundle generation complete|Compiled successfully"
           }
         }
+      }
+    },
+    {
+      "label": ".NET: Build Backend",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["build"],
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-backend"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: Run Backend",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["run"],
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-backend"
+      },
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: Test Backend",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["test"],
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-backend"
+      },
+      "isBackground": true,
+      "group": {
+        "kind": "test",
+        "isDefault": false
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": ".NET: Watch Backend",
+      "type": "shell",
+      "command": "dotnet",
+      "args": ["watch", "run"],
+      "options": {
+        "cwd": "${workspaceFolder}/tutoring-backend"
+      },
+      "isBackground": true,
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "problemMatcher": "$msCompile"
+    },
+    {
+      "label": "Start Full App",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        ".NET: Watch Backend",
+        "Angular: Start"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      }
+    },
+    {
+      "label": "Test Full App",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        ".NET: Test Backend",
+        ".NET: Watch Backend",
+        "Angular: Test"
+      ],
+      "group": {
+        "kind": "test",
+        "isDefault": false
       }
     }
   ]
