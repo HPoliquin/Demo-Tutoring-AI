@@ -1,0 +1,214 @@
+<div class="schedules-container">
+  <div class="header">
+    <h2>📅 Schedule Management</h2>
+    <div class="header-actions">
+      <button
+        class="btn btn-primary"
+        (click)="showForm()"
+        [disabled]="isLoading">
+        <span class="btn-icon">➕</span>
+        Add New Schedule
+      </button>
+      <button
+        class="btn btn-secondary"
+        (click)="generateMockData()"
+        [disabled]="isLoading">
+        <span class="btn-icon">🎲</span>
+        Generate Mock Data
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading Indicator -->
+  <div *ngIf="isLoading" class="loading">
+    <div class="spinner"></div>
+    <p>Loading schedules...</p>
+  </div>
+
+  <!-- Schedule Form Modal -->
+  <div *ngIf="isFormVisible" class="modal-overlay" (click)="hideForm()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>{{ isEditMode ? 'Edit Schedule' : 'Add New Schedule' }}</h3>
+        <button class="close-btn" (click)="hideForm()">✕</button>
+      </div>
+
+      <form [formGroup]="scheduleForm" (ngSubmit)="onSubmit()" class="schedule-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="tutoringClassId">Tutoring Class ID *</label>
+            <input
+              type="number"
+              id="tutoringClassId"
+              formControlName="tutoringClassId"
+              class="form-control"
+              [class.error]="scheduleForm.get('tutoringClassId')?.invalid && scheduleForm.get('tutoringClassId')?.touched"
+              min="1">
+            <div class="error-message"
+                 *ngIf="scheduleForm.get('tutoringClassId')?.invalid && scheduleForm.get('tutoringClassId')?.touched">
+              <span *ngIf="scheduleForm.get('tutoringClassId')?.errors?.['required']">Tutoring Class ID is required</span>
+              <span *ngIf="scheduleForm.get('tutoringClassId')?.errors?.['min']">Must be at least 1</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="dayOfWeek">Day of Week *</label>
+            <select
+              id="dayOfWeek"
+              formControlName="dayOfWeek"
+              class="form-control"
+              [class.error]="scheduleForm.get('dayOfWeek')?.invalid && scheduleForm.get('dayOfWeek')?.touched">
+              <option value="">Select a day</option>
+              <option *ngFor="let day of daysOfWeek" [value]="day.value">{{ day.label }}</option>
+            </select>
+            <div class="error-message"
+                 *ngIf="scheduleForm.get('dayOfWeek')?.invalid && scheduleForm.get('dayOfWeek')?.touched">
+              Day of week is required
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startTime">Start Time *</label>
+            <input
+              type="time"
+              id="startTime"
+              formControlName="startTime"
+              class="form-control"
+              [class.error]="scheduleForm.get('startTime')?.invalid && scheduleForm.get('startTime')?.touched">
+            <div class="error-message"
+                 *ngIf="scheduleForm.get('startTime')?.invalid && scheduleForm.get('startTime')?.touched">
+              Start time is required
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="endTime">End Time *</label>
+            <input
+              type="time"
+              id="endTime"
+              formControlName="endTime"
+              class="form-control"
+              [class.error]="scheduleForm.get('endTime')?.invalid && scheduleForm.get('endTime')?.touched">
+            <div class="error-message"
+                 *ngIf="scheduleForm.get('endTime')?.invalid && scheduleForm.get('endTime')?.touched">
+              End time is required
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="location">Location</label>
+            <input
+              type="text"
+              id="location"
+              formControlName="location"
+              class="form-control"
+              placeholder="e.g., Room 101, Online, Library"
+              [class.error]="scheduleForm.get('location')?.invalid && scheduleForm.get('location')?.touched">
+            <div class="error-message"
+                 *ngIf="scheduleForm.get('location')?.invalid && scheduleForm.get('location')?.touched">
+              <span *ngIf="scheduleForm.get('location')?.errors?.['maxlength']">Location must be less than 200 characters</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="maxCapacity">Max Capacity *</label>
+            <input
+              type="number"
+              id="maxCapacity"
+              formControlName="maxCapacity"
+              class="form-control"
+              min="1"
+              max="50"
+              [class.error]="scheduleForm.get('maxCapacity')?.invalid && scheduleForm.get('maxCapacity')?.touched">
+            <div class="error-message"
+                 *ngIf="scheduleForm.get('maxCapacity')?.invalid && scheduleForm.get('maxCapacity')?.touched">
+              <span *ngIf="scheduleForm.get('maxCapacity')?.errors?.['required']">Max capacity is required</span>
+              <span *ngIf="scheduleForm.get('maxCapacity')?.errors?.['min']">Must be at least 1</span>
+              <span *ngIf="scheduleForm.get('maxCapacity')?.errors?.['max']">Must be 50 or less</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" formControlName="isActive">
+            <span class="checkmark"></span>
+            Active Schedule
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="hideForm()">Cancel</button>
+          <button type="submit" class="btn btn-primary" [disabled]="scheduleForm.invalid">
+            {{ isEditMode ? 'Update Schedule' : 'Create Schedule' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Schedules List -->
+  <div class="schedules-grid" *ngIf="!isLoading">
+    <div class="schedule-card" *ngFor="let schedule of schedules; trackBy: trackByScheduleId">
+      <div class="card-header">
+        <div class="schedule-info">
+          <h3>{{ schedule.dayOfWeek }}</h3>
+          <div class="time-range">
+            {{ formatTime(schedule.startTime) }} - {{ formatTime(schedule.endTime) }}
+          </div>
+        </div>
+        <div class="status-badge" [class.active]="schedule.isActive" [class.inactive]="!schedule.isActive">
+          {{ schedule.isActive ? 'Active' : 'Inactive' }}
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="info-item">
+          <span class="label">Class ID:</span>
+          <span class="value">{{ schedule.tutoringClassId }}</span>
+        </div>
+
+        <div class="info-item" *ngIf="schedule.location">
+          <span class="label">📍 Location:</span>
+          <span class="value">{{ schedule.location }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">👥 Max Capacity:</span>
+          <span class="value">{{ schedule.maxCapacity }} students</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">📅 Created:</span>
+          <span class="value">{{ schedule.createdAt | date:'short' }}</span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-sm btn-outline-primary" (click)="editSchedule(schedule)">
+          <span class="btn-icon">✏️</span>
+          Edit
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="deleteSchedule(schedule.id)">
+          <span class="btn-icon">🗑️</span>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="schedules.length === 0 && !isLoading" class="empty-state">
+    <div class="empty-icon">📅</div>
+    <h3>No Schedules Found</h3>
+    <p>Get started by creating your first schedule or generating some mock data.</p>
+    <button class="btn btn-primary" (click)="showForm()">
+      <span class="btn-icon">➕</span>
+      Add First Schedule
+    </button>
+  </div>
+</div>

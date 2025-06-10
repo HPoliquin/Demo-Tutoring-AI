@@ -1,0 +1,168 @@
+<!-- Delete confirmation modal -->
+<div *ngIf="showModal" class="modal-overlay">
+  <div class="modal">
+    <h2>Confirm Deletion</h2>
+    <p>Are you sure you want to delete this class?</p>
+    <div class="modal-actions">
+      <button (click)="deleteClass(modalClassId!); closeModal()">Yes, Delete</button>
+      <button (click)="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="classes-container">
+  <div class="header">
+    <h1>📚 Tutoring Classes</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="addMockData()">
+        🎲 Add Sample Data
+      </button>
+      <button class="btn btn-primary" (click)="toggleAddForm()">
+        {{ showAddForm ? '❌ Cancel' : '➕ Add New Class' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Add New Class Form -->
+  <div *ngIf="showAddForm" class="add-form-container">
+    <div class="card">
+      <h3>Create New Class</h3>
+      <form (ngSubmit)="addClass()">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Class Name *</label>
+            <input
+              id="name"
+              [(ngModel)]="newClass.name"
+              name="name"
+              placeholder="e.g., Advanced Calculus"
+              required />
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject *</label>
+            <select
+              id="subject"
+              [(ngModel)]="newClass.subject"
+              name="subject"
+              required>
+              <option value="">Select a subject</option>
+              <option *ngFor="let subject of subjects" [value]="subject">{{ subject }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            [(ngModel)]="newClass.description"
+            name="description"
+            rows="3"
+            placeholder="Describe what this class covers..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="difficulty">Difficulty Level</label>
+            <select
+              id="difficulty"
+              [(ngModel)]="newClass.difficultyLevel"
+              name="difficultyLevel">
+              <option *ngFor="let level of difficultyLevels" [value]="level.value">
+                {{ level.label }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="price">Price per Hour ($)</label>
+            <input
+              id="price"
+              type="number"
+              [(ngModel)]="newClass.pricePerHour"
+              name="pricePerHour"
+              min="0"
+              step="0.01"
+              placeholder="0.00" />
+          </div>
+          <div class="form-group">
+            <label for="maxStudents">Max Students</label>
+            <input
+              id="maxStudents"
+              type="number"
+              [(ngModel)]="newClass.maxStudents"
+              name="maxStudents"
+              min="1"
+              max="50"
+              placeholder="10" />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-success">Create Class</button>
+          <button type="button" class="btn btn-secondary" (click)="toggleAddForm()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Classes Grid -->
+  <div class="classes-grid">
+    <div *ngFor="let class of classes" class="class-card">
+      <div class="class-header">
+        <div class="class-title">
+          <h3>{{ class.name }}</h3>
+          <span class="subject-badge">{{ class.subject }}</span>
+        </div>
+        <div class="class-actions">
+          <button class="btn-icon" (click)="openModal(class.id)" title="Delete class">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <div class="class-content">
+        <p *ngIf="class.description" class="description">{{ class.description }}</p>
+
+        <div class="class-details">
+          <div class="detail-item">
+            <span class="label">Difficulty:</span>
+            <span class="difficulty-badge difficulty-{{ class.difficultyLevel }}">
+              {{ getDifficultyLabel(class.difficultyLevel) }}
+            </span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Price:</span>
+            <span class="price">${{ class.pricePerHour }}/hour</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Capacity:</span>
+            <span class="capacity">{{ class.maxStudents }} students</span>
+          </div>
+
+          <div class="detail-item">
+            <span class="label">Schedules:</span>
+            <span class="schedules-count">
+              {{ class.schedules?.length || 0 }} time slots
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="class-footer">
+        <small class="created-date">
+          Created: {{ class.createdAt | date:'short' }}
+        </small>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div *ngIf="classes.length === 0" class="empty-state">
+      <div class="empty-icon">📚</div>
+      <h3>No Classes Yet</h3>
+      <p>Start by adding some tutoring classes to get organized!</p>
+      <button class="btn btn-primary" (click)="toggleAddForm()">Add Your First Class</button>
+    </div>
+  </div>
+</div>

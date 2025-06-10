@@ -1,0 +1,130 @@
+<div class="students-container">
+  <div class="header">
+    <h1>👥 Student Management</h1>
+    <button class="btn btn-primary" (click)="showAddForm = true">
+      <span>➕</span>
+      Add New Student
+    </button>
+  </div>
+
+  <!-- Add Student Form Modal -->
+  <div *ngIf="showAddForm" class="modal-overlay" (click)="showAddForm = false">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Add New Student</h3>
+        <button class="close-btn" (click)="showAddForm = false">✕</button>
+      </div>
+      <form (ngSubmit)="addStudent()" class="student-form">
+        <div class="form-group">
+          <label for="name">Name *</label>
+          <input
+            type="text"
+            id="name"
+            [(ngModel)]="newStudent.name"
+            name="name"
+            placeholder="Enter student name"
+            required
+            class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input
+            type="email"
+            id="email"
+            [(ngModel)]="newStudent.email"
+            name="email"
+            placeholder="Enter email address"
+            required
+            class="form-control">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="showAddForm = false">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Student</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3>Confirm Deletion</h3>
+        <button class="close-btn" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this student? This action cannot be undone.</p>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-danger" (click)="deleteStudent(modalStudentId!); closeModal()">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Students Grid -->
+  <div class="students-grid" *ngIf="students.length > 0">
+    <div class="student-card" *ngFor="let student of students">
+      <div class="card-header">
+        <h3 class="student-name">{{ student.name }}</h3>
+        <p class="student-email">{{ student.email }}</p>
+      </div>
+
+      <div class="card-body">
+        <div class="info-item" *ngIf="student.phoneNumber">
+          <span class="label">📞 Phone:</span>
+          <span class="value">{{ student.phoneNumber }}</span>
+        </div>
+
+        <div class="info-item" *ngIf="student.age">
+          <span class="label">🎂 Age:</span>
+          <span class="value">{{ student.age }} years old</span>
+        </div>
+
+        <div class="info-item" *ngIf="student.grade">
+          <span class="label">🎓 Grade:</span>
+          <span class="value">{{ student.grade }}</span>
+        </div>
+
+        <div class="info-item" *ngIf="student.address">
+          <span class="label">📍 Address:</span>
+          <span class="value">{{ student.address }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">📅 Joined:</span>
+          <span class="value">{{ student.createdAt | date:'short' }}</span>
+        </div>
+
+        <div class="info-item">
+          <span class="label">Status:</span>
+          <span class="value" [style.color]="student.isActive ? '#4CAF50' : '#FF9800'">
+            {{ student.isActive ? '✅ Active' : '⏸️ Inactive' }}
+          </span>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn btn-sm btn-outline-primary">
+          <span>✏️</span>
+          Edit
+        </button>
+        <button class="btn btn-sm btn-outline-danger" (click)="openModal(student.id)">
+          <span>🗑️</span>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="students.length === 0" class="empty-state">
+    <div class="empty-icon">👥</div>
+    <h3>No Students Found</h3>
+    <p>Get started by adding your first student to the system.</p>
+    <button class="btn btn-primary" (click)="showAddForm = true">
+      <span>➕</span>
+      Add First Student
+    </button>
+  </div>
+</div>

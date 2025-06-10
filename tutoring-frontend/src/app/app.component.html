@@ -1,0 +1,23 @@
+
+<div class="app-container">
+  <div class="app-header">
+    <h1>🎓 Tutoring Management System</h1>
+    <nav class="navigation">
+      <a routerLink="/students" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">👥</span>
+        Students
+      </a>
+      <a routerLink="/classes" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📚</span>
+        Classes
+      </a>
+      <a routerLink="/schedules" routerLinkActive="active" class="nav-link">
+        <span class="nav-icon">📅</span>
+        Schedules
+      </a>
+    </nav>
+  </div>
+  <div class="app-content">
+    <router-outlet></router-outlet>
+  </div>
+</div>
