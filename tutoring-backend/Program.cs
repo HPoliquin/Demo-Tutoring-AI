@@ -38,8 +38,33 @@ var sendGridApiKey = configuration["SendGrid:ApiKey"];
 
 builder.Services.AddSingleton<ISendGridClient>(new SendGridClient(sendGridApiKey));
 
+var connectionString = configuration.GetConnectionString("PostgresConnection");
+var dbName = configuration["DB:Name"];
+var dbUser = configuration["DB:User"];
+var dbPassword = configuration["DB:Password"];
+var dbHost = configuration["DB:Host"] ?? "localhost";
+var dbPort = configuration["DB:Port"] ?? "5432";
+if (string.IsNullOrEmpty(dbName) || string.IsNullOrEmpty(dbUser) || string.IsNullOrEmpty(dbPassword))
+{
+    throw new InvalidOperationException("Database connection details are not configured.");
+}
+
+if (string.IsNullOrEmpty(connectionString))
+{
+  throw new InvalidOperationException("Postgres connection string is not configured.");
+}
+
+connectionString = connectionString.Replace("{DB_NAME}", dbName)
+                                       .Replace("{DB_USER}", dbUser)
+                                       .Replace("{DB_PASSWORD}", dbPassword)
+                                       .Replace("{DB_HOST}", dbHost)
+                                       .Replace("{DB_PORT}", dbPort);
+
+Console.WriteLine($"Using connection string: {connectionString}");
+
+
 builder.Services.AddDbContext<TutoringDbContext>(options =>
-    options.UseNpgsql(configuration.GetConnectionString("PostgresConnection")));
+    options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 
@@ -91,7 +116,7 @@ app.MapPost("/students", async (TutoringDbContext db, Student student) =>
 {
     // Ensure DateTime values are properly set to UTC
     student.CreatedAt = DateTime.UtcNow;
-    
+
     db.Students.Add(student);
     await db.SaveChangesAsync();
     return Results.Created($"/students/{student.Id}", student);
@@ -138,7 +163,7 @@ app.MapPut("/students/{id}", async (TutoringDbContext db, int id, Student update
     student.Grade = updatedStudent.Grade;
     student.Address = updatedStudent.Address;
     student.IsActive = updatedStudent.IsActive;
-    
+
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
@@ -159,7 +184,7 @@ app.MapPost("/classes", async (TutoringDbContext db, TutoringClass tutoringClass
 {
     // Ensure DateTime values are properly set to UTC
     tutoringClass.CreatedAt = DateTime.UtcNow;
-    
+
     db.TutoringClasses.Add(tutoringClass);
     await db.SaveChangesAsync();
     return Results.Created($"/classes/{tutoringClass.Id}", tutoringClass);
@@ -196,7 +221,7 @@ app.MapPut("/classes/{id}", async (TutoringDbContext db, int id, TutoringClass u
     tutoringClass.DifficultyLevel = updatedClass.DifficultyLevel;
     tutoringClass.PricePerHour = updatedClass.PricePerHour;
     tutoringClass.MaxStudents = updatedClass.MaxStudents;
-    
+
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
@@ -218,7 +243,7 @@ app.MapPost("/schedules", async (TutoringDbContext db, Schedule schedule) =>
     schedule.StartTime = DateTime.SpecifyKind(schedule.StartTime, DateTimeKind.Utc);
     schedule.EndTime = DateTime.SpecifyKind(schedule.EndTime, DateTimeKind.Utc);
     schedule.CreatedAt = DateTime.UtcNow;
-    
+
     db.Schedules.Add(schedule);
     await db.SaveChangesAsync();
     return Results.Created($"/schedules/{schedule.Id}", schedule);
@@ -256,7 +281,7 @@ app.MapPut("/schedules/{id}", async (TutoringDbContext db, int id, Schedule upda
     schedule.Location = updatedSchedule.Location;
     schedule.IsActive = updatedSchedule.IsActive;
     schedule.MaxCapacity = updatedSchedule.MaxCapacity;
-    
+
     await db.SaveChangesAsync();
     return Results.NoContent();
 });
@@ -277,7 +302,7 @@ app.MapPost("/enrollments/class", async (TutoringDbContext db, StudentClassEnrol
     // Check if student is already enrolled in this class
     var existingEnrollment = await db.StudentClassEnrollments
         .FirstOrDefaultAsync(e => e.StudentId == enrollment.StudentId && e.TutoringClassId == enrollment.TutoringClassId);
-    
+
     if (existingEnrollment is not null)
         return Results.BadRequest("Student is already enrolled in this class");
 
@@ -294,7 +319,7 @@ app.MapPost("/enrollments/schedule", async (TutoringDbContext db, StudentSchedul
     // Check if student is already enrolled in this schedule
     var existingEnrollment = await db.StudentScheduleEnrollments
         .FirstOrDefaultAsync(e => e.StudentId == enrollment.StudentId && e.ScheduleId == enrollment.ScheduleId);
-    
+
     if (existingEnrollment is not null)
         return Results.BadRequest("Student is already enrolled in this schedule");
 
@@ -302,10 +327,10 @@ app.MapPost("/enrollments/schedule", async (TutoringDbContext db, StudentSchedul
     var schedule = await db.Schedules
         .Include(s => s.StudentEnrollments)
         .FirstOrDefaultAsync(s => s.Id == enrollment.ScheduleId);
-    
+
     if (schedule is null)
         return Results.NotFound("Schedule not found");
-    
+
     if (schedule.StudentEnrollments.Count >= schedule.MaxCapacity)
         return Results.BadRequest("Schedule is at full capacity");
 
@@ -347,34 +372,34 @@ app.MapPost("/schedules/mock", async (TutoringDbContext db) =>
         // Add multiple schedules per class
         mockSchedules.AddRange(new[]
         {
-            new Schedule 
-            { 
-                TutoringClassId = tutoringClass.Id, 
-                StartTime = DateTime.SpecifyKind(startDate.AddHours(9), DateTimeKind.Utc), 
-                EndTime = DateTime.SpecifyKind(startDate.AddHours(10), DateTimeKind.Utc), 
-                DayOfWeek = "Monday", 
+            new Schedule
+            {
+                TutoringClassId = tutoringClass.Id,
+                StartTime = DateTime.SpecifyKind(startDate.AddHours(9), DateTimeKind.Utc),
+                EndTime = DateTime.SpecifyKind(startDate.AddHours(10), DateTimeKind.Utc),
+                DayOfWeek = "Monday",
                 Location = "Room A1",
                 IsActive = true,
                 MaxCapacity = tutoringClass.MaxStudents,
                 CreatedAt = DateTime.UtcNow
             },
-            new Schedule 
-            { 
-                TutoringClassId = tutoringClass.Id, 
-                StartTime = DateTime.SpecifyKind(startDate.AddDays(2).AddHours(14), DateTimeKind.Utc), 
-                EndTime = DateTime.SpecifyKind(startDate.AddDays(2).AddHours(15), DateTimeKind.Utc), 
-                DayOfWeek = "Wednesday", 
+            new Schedule
+            {
+                TutoringClassId = tutoringClass.Id,
+                StartTime = DateTime.SpecifyKind(startDate.AddDays(2).AddHours(14), DateTimeKind.Utc),
+                EndTime = DateTime.SpecifyKind(startDate.AddDays(2).AddHours(15), DateTimeKind.Utc),
+                DayOfWeek = "Wednesday",
                 Location = "Room B2",
                 IsActive = true,
                 MaxCapacity = tutoringClass.MaxStudents,
                 CreatedAt = DateTime.UtcNow
             },
-            new Schedule 
-            { 
-                TutoringClassId = tutoringClass.Id, 
-                StartTime = DateTime.SpecifyKind(startDate.AddDays(4).AddHours(10), DateTimeKind.Utc), 
-                EndTime = DateTime.SpecifyKind(startDate.AddDays(4).AddHours(11), DateTimeKind.Utc), 
-                DayOfWeek = "Friday", 
+            new Schedule
+            {
+                TutoringClassId = tutoringClass.Id,
+                StartTime = DateTime.SpecifyKind(startDate.AddDays(4).AddHours(10), DateTimeKind.Utc),
+                EndTime = DateTime.SpecifyKind(startDate.AddDays(4).AddHours(11), DateTimeKind.Utc),
+                DayOfWeek = "Friday",
                 Location = "Room C3",
                 IsActive = true,
                 MaxCapacity = tutoringClass.MaxStudents,
