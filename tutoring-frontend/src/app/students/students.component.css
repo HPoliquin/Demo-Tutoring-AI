@@ -213,9 +213,12 @@
 }
 
 .modal-content {
+
   background: white;
   border-radius: 20px;
-  width: 90%;
+  width: 90vh;
+  position: fixed;
+  top: 20vh;
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
