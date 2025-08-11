@@ -29,6 +29,16 @@ export class StudentsComponent implements OnInit {
   };
   showModal = false;
   showAddForm = false;
+  showEditForm = false;
+  editStudent: Partial<Student> = {
+    name: '',
+    email: '',
+    phoneNumber: '',
+    age: undefined,
+    grade: '',
+    address: '',
+    isActive: true
+  };
   modalStudentId: number | null = null;
 
   constructor(private readonly studentsService: StudentsService, httpclient: HttpClient) {}
@@ -68,10 +78,31 @@ export class StudentsComponent implements OnInit {
     this.showAddForm = false;
   }
 
-  updateStudent(student: Student): void {
-    this.studentsService.updateStudent(student).subscribe(() => {
+  updateStudent(): void {
+    if (!this.editStudent) return;
+    this.studentsService.updateStudent(this.editStudent as Student).subscribe(() => {
       this.getStudents();
+      this.closeEditForm();
     });
+  }
+
+  openEditForm(student: Student): void {
+    // Create a shallow copy to avoid mutating the list directly
+    this.editStudent = { ...student };
+    this.showEditForm = true;
+  }
+
+  closeEditForm(): void {
+    this.editStudent = {
+      name: '',
+      email: '',
+      phoneNumber: '',
+      age: undefined,
+      grade: '',
+      address: '',
+      isActive: true
+    };
+    this.showEditForm = false;
   }
 
   deleteStudent(id: number): void {
